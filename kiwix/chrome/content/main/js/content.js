@@ -753,11 +753,11 @@ function populateBookList(container) {
     var search = getBookListSearchFilter();
 
     library.listBooks(mode, sortBy, maxSize, language, creator, publisher, search);
-
+    //dump("You are now in populateBookList in content.js\n");
     /* Go through all books */
     book = library.getNextBookInList();
     while (book != undefined) {
-	
+	if(book.origID=="") {
 	var box = createLibraryItem(book);
 	box.setAttribute("style", "background-color: " + backgroundColor + ";");
 
@@ -777,6 +777,7 @@ function populateBookList(container) {
 
 	/* Compute new item background color */
 	backgroundColor = (backgroundColor == "#FFFFFF" ? "#EEEEEE" : "#FFFFFF");
+	}	
 	book = library.getNextBookInList();
     }
 
