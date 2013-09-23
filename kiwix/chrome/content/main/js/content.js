@@ -30,6 +30,7 @@ var _isOnline = undefined;
 var checkDownloaderId;
 var checkDownloadStatusId;
 var updateOnlineStatusId;
+var downloadDiffList=new Array();
 
 downloader.onmessage = function(event) {
     var message = event.data;
@@ -290,7 +291,6 @@ function getDownloadStatus() {
 
 		/* Download started */
 		if (ariaDownloadCompleted > 0 || ariaDownloadSpeed > 0) {
-
 		    /* Update the settings */
 		    settings.setDownloadProperty(kiwixDownload.id, "completed", ariaDownloadCompleted);
 
@@ -327,10 +327,15 @@ function getDownloadStatus() {
 				     undefined, callback);
 		    
 		    /* Try to open the new file */
+		    var indx= downloadDiffList.indexOf(kiwixDownload.id);
+		    if(indx!=-1) {
+			downloadDiffList.splice(index,1);
+			}
 		    book = library.getBookById(kiwixDownload.id);
+		    if(book.origID=="") {
 		    if (displayConfirmDialog(getProperty("openContentConfirm",  book.title))) {
 			manageOpenFile(book.path);
-		    }
+		    } }
 		} else if (ariaDownloadStatus == "waiting") {
 		}
 	    }
@@ -443,6 +448,10 @@ function manageStopDownload(id) {
 
 	/* Remove Kiwix download */
 	settings.setDownloadProperty(id, "id", "");
+	var indx= downloadDiffList.indexOf(kiwixDownload.id);
+	    if(indx!=-1) {
+		downloadDiffList.splice(index,1);
+		}
     }
 }
 
@@ -550,26 +559,14 @@ function manageStartDownload(id, completed) {
 }
 
 function managePatchFile(id) {	//Two cases arrive here: 1. If the patch file is available, but not available offline, 2, if the patch file 
-				//is available offline.
-	var copy=id;
+			
 	var book =library.getBookById(id);
 	if(book.patchID!="")	{	//If a patch is available
 		var patchbook=library.getBookById(book.patchID);
 		if(patchbook.path=="") {	//IF the patch file not available locally
-			dump("ID: "+id);
-			dump("patchbookid: "+patchbook.id);
-			id=patchbook.id;
-			settings.addDownload(id);
-    			configureLibraryContentItemVisuals(id, "download");
-		        var book = library.getBookById(id);
-    			var progressbar = document.getElementById("progressbar-" + id);
-    			if (completed != undefined && completed != "0" && completed != "") {
-				var percent = completed / (book.size * 1024) * 100;
-				progressbar.setAttribute("value", percent);
-    			} else {
-				progressbar.setAttribute("value", 0);
-    			}
-		        startDownload(book.url, book.id);
+			downloadDiffList.push(patchbook.id);	
+			manageStartDownload(patchbook.id);	
+				
 		}
 	}
 	alert("patch in process");
@@ -841,7 +838,7 @@ function populateBookList(container) {
 	if(book.patchID!="") {
 		dump("\npatchID: "+book.patchID);	
 	}*/
-	//if(book.origID=="") {
+	if(book.origID==""||downloadDiffList.indexOf(book.id)!=-1) {
 	var box = createLibraryItem(book);
 	box.setAttribute("style", "background-color: " + backgroundColor + ";");
 
@@ -850,8 +847,6 @@ function populateBookList(container) {
 
 	//Different cases for the book.
 	if(book.path=="") {	//If the book is online
-				//If there is a patch available. - unlikeley situation, but just in case. The real file will 
-				//be downloaded, not the diff file. IF there is no patch available, the real file will be downloaded .
 		var downloadStatus = settings.getDownloadProperty(book.id, "status");
         	if (downloadStatus != undefined) {
              		configureLibraryContentItemVisuals(book.id, "download");
@@ -875,7 +870,7 @@ function populateBookList(container) {
 
 		/* Compute new item background color */
 	backgroundColor = (backgroundColor == "#FFFFFF" ? "#EEEEEE" : "#FFFFFF");
-	//}	
+	}	
 	book = library.getNextBookInList();
     }
 
