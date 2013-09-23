@@ -455,7 +455,20 @@ function cleanDownloadTemporaryFiles(id) {
 }
 
 function configureLibraryContentItemVisuals(id, mode) {
-    if (mode == "download") {
+    if (mode == "patch-ready") {
+	var updateButton = document.getElementById("update-button-" + id);
+	updateButton.setAttribute("style", "display: block;");
+	var downloadButton = document.getElementById("download-button-" + id);
+	downloadButton.setAttribute("style", "display: none;");
+	var loadButton = document.getElementById("load-button-" + id);
+	loadButton.setAttribute("style", "display: block;");
+	var removeButton = document.getElementById("remove-button-" + id);
+	removeButton.setAttribute("style", "display: block;");
+	var detailsDeck = document.getElementById("download-deck-" + id);
+	detailsDeck.setAttribute("selectedIndex", "0");
+    } else if (mode == "download") {
+	var updateButton = document.getElementById("update-button-" + id);
+	updateButton.setAttribute("style", "display: none;");
 	var downloadButton = document.getElementById("download-button-" + id);
 	downloadButton.setAttribute("style", "display: none;");
 	var loadButton = document.getElementById("load-button-" + id);
@@ -469,8 +482,10 @@ function configureLibraryContentItemVisuals(id, mode) {
 	var downloadStatusLabel = document.getElementById("download-status-label-" + id);
 	downloadStatusLabel.setAttribute("value", getProperty("preparingContentDownload"));
 	var detailsDeck = document.getElementById("download-deck-" + id);
-	detailsDeck.setAttribute("selectedIndex", "1");
+	detailsDeck.setAttribute("selectedIndex", "0");
     } else if (mode == "online") {
+	var updateButton = document.getElementById("update-button-" + id);
+	updateButton.setAttribute("style", "display: none;");
 	var downloadButton = document.getElementById("download-button-" + id);
 	downloadButton.setAttribute("style", "display: block;");
 	var detailsDeck = document.getElementById("download-deck-" + id);
@@ -480,6 +495,8 @@ function configureLibraryContentItemVisuals(id, mode) {
 	var removeButton = document.getElementById("remove-button-" + id);
 	removeButton.setAttribute("style", "display: none;");
     } else if (mode == "offline") {
+	var updateButton = document.getElementById("update-button-" + id);
+	updateButton.setAttribute("style", "display: none;");
 	var downloadButton = document.getElementById("download-button-" + id);
 	downloadButton.setAttribute("style", "display: none;");
 	var detailsDeck = document.getElementById("download-deck-" + id);
@@ -505,6 +522,10 @@ function manageStartDownload(id, completed) {
     }
     
     startDownload(book.url, book.id);
+}
+
+function managePatchFile(id) {
+	alert("patch in process");
 }
 
 function manageResumeDownload(id) {
@@ -588,7 +609,6 @@ function createLibraryItem(book) {
     titleLabel.setAttribute("readonly", true);
     titleLabel.setAttribute("size", 100);
     titleLabel.setAttribute("value", book.title || book.path);
-
     detailsBox.appendChild(titleLabel);
     
     var description = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", 
@@ -704,6 +724,15 @@ function createLibraryItem(book) {
 					     "vbox");
     buttonBox.appendChild(spacer.cloneNode(true));
     
+    /*Update (zimpatch)*/
+    
+    var updateButton = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", 
+						"button");
+    updateButton.setAttribute("label", "Update");
+    updateButton.setAttribute("id", "update-button-" + book.id);
+    updateButton.setAttribute("onclick", "event.stopPropagation(); managePatchFile('" + book.id + "')");
+    buttonBox.appendChild(updateButton);
+    
     var removeButton = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", 
 						"button");
     removeButton.setAttribute("label", "Remove");
@@ -761,20 +790,23 @@ function populateBookList(container) {
 	var box = createLibraryItem(book);
 	box.setAttribute("style", "background-color: " + backgroundColor + ";");
 
-	/* Add the new item to the UI */
+	/* Add the new item to the UI */ 
 	container.appendChild(box);
-
-        if (book.path != "") {
-           configureLibraryContentItemVisuals(book.id, "offline");
-        } else {
-           var downloadStatus = settings.getDownloadProperty(book.id, "status");
-           if (downloadStatus != undefined) {
-             configureLibraryContentItemVisuals(book.id, "download");
-           } else {
-             configureLibraryContentItemVisuals(book.id, "online");
-           }
+	if(book.patchID!="") {
+		configureLibraryContentItemVisuals(book.id, "patch-ready");
+	}
+	else{
+        	if (book.path != "") {
+       		    configureLibraryContentItemVisuals(book.id, "offline");
+        	} else {
+           		var downloadStatus = settings.getDownloadProperty(book.id, "status");
+           		if (downloadStatus != undefined) {
+             		configureLibraryContentItemVisuals(book.id, "download");
+           	} else {
+             		configureLibraryContentItemVisuals(book.id, "online");
+           	}
         }
-
+	}
 	/* Compute new item background color */
 	backgroundColor = (backgroundColor == "#FFFFFF" ? "#EEEEEE" : "#FFFFFF");
 	}	
