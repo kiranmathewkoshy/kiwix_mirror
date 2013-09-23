@@ -549,7 +549,29 @@ function manageStartDownload(id, completed) {
     startDownload(book.url, book.id);
 }
 
-function managePatchFile(id) {
+function managePatchFile(id) {	//Two cases arrive here: 1. If the patch file is available, but not available offline, 2, if the patch file 
+				//is available offline.
+	var copy=id;
+	var book =library.getBookById(id);
+	if(book.patchID!="")	{	//If a patch is available
+		var patchbook=library.getBookById(book.patchID);
+		if(patchbook.path=="") {	//IF the patch file not available locally
+			dump("ID: "+id);
+			dump("patchbookid: "+patchbook.id);
+			id=patchbook.id;
+			settings.addDownload(id);
+    			configureLibraryContentItemVisuals(id, "download");
+		        var book = library.getBookById(id);
+    			var progressbar = document.getElementById("progressbar-" + id);
+    			if (completed != undefined && completed != "0" && completed != "") {
+				var percent = completed / (book.size * 1024) * 100;
+				progressbar.setAttribute("value", percent);
+    			} else {
+				progressbar.setAttribute("value", 0);
+    			}
+		        startDownload(book.url, book.id);
+		}
+	}
 	alert("patch in process");
 }
 
@@ -819,7 +841,7 @@ function populateBookList(container) {
 	if(book.patchID!="") {
 		dump("\npatchID: "+book.patchID);	
 	}*/
-	if(book.origID=="") {
+	//if(book.origID=="") {
 	var box = createLibraryItem(book);
 	box.setAttribute("style", "background-color: " + backgroundColor + ";");
 
@@ -853,7 +875,7 @@ function populateBookList(container) {
 
 		/* Compute new item background color */
 	backgroundColor = (backgroundColor == "#FFFFFF" ? "#EEEEEE" : "#FFFFFF");
-	}	
+	//}	
 	book = library.getNextBookInList();
     }
 
