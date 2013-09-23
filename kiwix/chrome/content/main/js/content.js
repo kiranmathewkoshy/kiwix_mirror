@@ -455,7 +455,8 @@ function cleanDownloadTemporaryFiles(id) {
 }
 
 function configureLibraryContentItemVisuals(id, mode) {
-    if (mode == "patch-ready") {
+  if (mode == "patch-avail") {	//File is offline, patch available online, not being downloaded.
+					//Ability to read file, remove file and to update file.
 	var updateButton = document.getElementById("update-button-" + id);
 	updateButton.setAttribute("style", "display: block;");
 	var downloadButton = document.getElementById("download-button-" + id);
@@ -466,7 +467,8 @@ function configureLibraryContentItemVisuals(id, mode) {
 	removeButton.setAttribute("style", "display: block;");
 	var detailsDeck = document.getElementById("download-deck-" + id);
 	detailsDeck.setAttribute("selectedIndex", "0");
-    } else if (mode == "download") {
+    } else if (mode == "patch-download") {	//File is offline, patch is being downloaded,
+						//Progress bar shown, pause, resume, cancel buttons.
 	var updateButton = document.getElementById("update-button-" + id);
 	updateButton.setAttribute("style", "display: none;");
 	var downloadButton = document.getElementById("download-button-" + id);
@@ -482,8 +484,25 @@ function configureLibraryContentItemVisuals(id, mode) {
 	var downloadStatusLabel = document.getElementById("download-status-label-" + id);
 	downloadStatusLabel.setAttribute("value", getProperty("preparingContentDownload"));
 	var detailsDeck = document.getElementById("download-deck-" + id);
-	detailsDeck.setAttribute("selectedIndex", "0");
-    } else if (mode == "online") {
+	detailsDeck.setAttribute("selectedIndex", "1");
+    } else if (mode == "download") {		//Online file, being downloaded.
+	var updateButton = document.getElementById("update-button-" + id);
+	updateButton.setAttribute("style", "display: none;");
+	var downloadButton = document.getElementById("download-button-" + id);
+	downloadButton.setAttribute("style", "display: none;");
+	var loadButton = document.getElementById("load-button-" + id);
+	loadButton.setAttribute("style", "display: none;");
+	var removeButton = document.getElementById("remove-button-" + id);
+	removeButton.setAttribute("style", "display: none;");
+	var playButton = document.getElementById("play-button-" + id);
+	playButton.setAttribute("style", "display: none;");
+	var pauseButton = document.getElementById("pause-button-" + id);
+	pauseButton.setAttribute("style", "display: block;");
+	var downloadStatusLabel = document.getElementById("download-status-label-" + id);
+	downloadStatusLabel.setAttribute("value", getProperty("preparingContentDownload"));
+	var detailsDeck = document.getElementById("download-deck-" + id);
+	detailsDeck.setAttribute("selectedIndex", "1");
+    } else if (mode == "online") {		//Online file, not being downloaded.
 	var updateButton = document.getElementById("update-button-" + id);
 	updateButton.setAttribute("style", "display: none;");
 	var downloadButton = document.getElementById("download-button-" + id);
@@ -509,6 +528,12 @@ function configureLibraryContentItemVisuals(id, mode) {
 }
 
 function manageStartDownload(id, completed) {
+    var book=library.getBookById(id);
+    if(book.path!="") {	//Means book is already available offline, need to download its patch file.
+	if(book.patchID!="") {
+		id=book.patchID;
+	}	
+    }
     settings.addDownload(id);
     configureLibraryContentItemVisuals(id, "download");
 
@@ -786,28 +811,47 @@ function populateBookList(container) {
     /* Go through all books */
     book = library.getNextBookInList();
     while (book != undefined) {
+	/*dump("\n\nID: "+book.id);
+	dump("\nTitle: "+book.title);
+	if(book.origID!="") {
+		dump("\norigID: "+book.origID);	
+	}
+	if(book.patchID!="") {
+		dump("\npatchID: "+book.patchID);	
+	}*/
 	if(book.origID=="") {
 	var box = createLibraryItem(book);
 	box.setAttribute("style", "background-color: " + backgroundColor + ";");
 
 	/* Add the new item to the UI */ 
 	container.appendChild(box);
-	if(book.patchID!="") {
-		configureLibraryContentItemVisuals(book.id, "patch-ready");
-	}
-	else{
-        	if (book.path != "") {
-       		    configureLibraryContentItemVisuals(book.id, "offline");
-        	} else {
-           		var downloadStatus = settings.getDownloadProperty(book.id, "status");
-           		if (downloadStatus != undefined) {
+
+	//Different cases for the book.
+	if(book.path=="") {	//If the book is online
+				//If there is a patch available. - unlikeley situation, but just in case. The real file will 
+				//be downloaded, not the diff file. IF there is no patch available, the real file will be downloaded .
+		var downloadStatus = settings.getDownloadProperty(book.id, "status");
+        	if (downloadStatus != undefined) {
              		configureLibraryContentItemVisuals(book.id, "download");
            	} else {
              		configureLibraryContentItemVisuals(book.id, "online");
            	}
-        }
 	}
-	/* Compute new item background color */
+	else {			//If the book is available offline. 
+		if(book.patchID!="") {	//If a patch is available for
+			var downloadStatus = settings.getDownloadProperty(book.id, "status");
+        		if (downloadStatus != undefined) {	//IF the patch file is being downloaded.
+        	     		configureLibraryContentItemVisuals(book.id, "patch-download");
+			} else {				//IF the patch file is not being downloaded/already downloaded.
+	             		configureLibraryContentItemVisuals(book.id, "patch-avail");
+			}
+		}
+		else {		//IF there is no patch file available for download.
+       		    configureLibraryContentItemVisuals(book.id, "offline");
+		}
+	}
+
+		/* Compute new item background color */
 	backgroundColor = (backgroundColor == "#FFFFFF" ? "#EEEEEE" : "#FFFFFF");
 	}	
 	book = library.getNextBookInList();
