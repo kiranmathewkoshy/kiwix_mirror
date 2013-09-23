@@ -68,6 +68,7 @@ namespace kiwix {
     string date;
     string url;
     string origID;
+    string patchID;
     string articleCount;
     string mediaCount;
     bool readOnly;

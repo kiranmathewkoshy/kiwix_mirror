@@ -277,6 +277,7 @@ NS_IMETHODIMP ContentManager::GetBookById(const nsACString &id,
 					  nsACString &language,
 					  nsACString &favicon,
 					  nsACString &origID,
+					  nsACString &patchID,
 					  nsACString &url, mozbool *retVal) {
   *retVal = PR_FALSE;
   const char *cid;
@@ -298,6 +299,7 @@ NS_IMETHODIMP ContentManager::GetBookById(const nsACString &id,
       date = nsDependentCString(book.date.data(), book.date.size());
       language = nsDependentCString(book.language.data(), book.language.size());
       origID = nsDependentCString(book.origID.data(), book.origID.size());
+      patchID = nsDependentCString(book.patchID.data(), book.patchID.size());
       url = nsDependentCString(book.url.data(), book.url.size());
 
       string faviconUrl = "";

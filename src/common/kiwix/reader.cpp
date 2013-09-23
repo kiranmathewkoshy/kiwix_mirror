@@ -19,37 +19,43 @@
 
 #include "reader.h"
 
-inline char hi(char v) {
-    char hex[] = "0123456789abcdef";
-    return hex[(v >> 4) & 0xf];
+
+
+std::string fakeUID(std::string input)
+{
+    std::string tmp="";
+    for(int i=0;i<input.size();i++)
+    {
+        if(input[i]!='-')
+            tmp+=input[i];
+    }
+    std::string output="";
+    for(int i=0;i<8;i++)
+    {
+        output+=tmp[i];
+    }
+    output+="-";
+    for(int i=8;i<12;i++)
+    {
+        output+=tmp[i];
+    }
+    output+="-";
+    for(int i=12;i<16;i++)
+    {
+        output+=tmp[i];
+    }
+    output+="-";
+    for(int i=12;i<16;i++)
+    {
+        output+=tmp[i];
+    }
+    output+="-";
+    for(int i=16;i<tmp.size();i++)
+    {
+        output+=tmp[i];
+    }
+    return output;
 }
-
-inline char lo(char v) {
-    char hex[] = "0123456789abcdef";
-    return hex[v & 0xf];
-}
-
-std::string hexUUID (std::string in) {
-    std::ostringstream out;
-    for (unsigned n = 0; n < 4; ++n)
-      out << hi(in[n]) << lo(in[n]);
-    out << '-';
-    for (unsigned n = 4; n < 6; ++n)
-      out << hi(in[n]) << lo(in[n]);
-    out << '-';
-    for (unsigned n = 6; n < 8; ++n)
-      out << hi(in[n]) << lo(in[n]);
-    out << '-';
-    for (unsigned n = 8; n < 10; ++n)
-      out << hi(in[n]) << lo(in[n]);
-    out << '-';
-    for (unsigned n = 10; n < 16; ++n)
-      out << hi(in[n]) << lo(in[n]);
-    std::string op=out.str();
-    return op;
-}
-
-
 
 static char charFromHex(std::string a) {
   std::istringstream Blat (a);
@@ -57,6 +63,7 @@ static char charFromHex(std::string a) {
   Blat >> std::hex >> Z;
   return char (Z);
 }
+
 
 void unescapeUrl(string &url) {
   std::string::size_type pos = 0;
@@ -324,28 +331,7 @@ namespace kiwix {
   string Reader::getOrigID() {
     string value;
     this->getMetatag("startfileuid", value);
-    if(value.empty())
-        return "";
-    std::string id=value;
-    std::string origID;
-    std::string temp="";
-    unsigned int k=0;
-    char tempArray[16]="";
-    for(unsigned int i=0; i<id.size(); i++)
-    {
-        if(id[i]=='\n')
-        {
-            tempArray[k]= atoi(temp.c_str());
-            temp="";
-            k++;
-        }
-        else
-        {
-            temp+=id[i];
-        }
-    }
-    origID=hexUUID(tempArray);
-    return origID;
+        return fakeUID(value);
   }
 
   /* Return the first page URL */

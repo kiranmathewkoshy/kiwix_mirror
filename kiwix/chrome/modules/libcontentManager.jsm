@@ -20,6 +20,7 @@ let libcontentManager = {
               { "language": ctypes.char.ptr },
               { "favicon": ctypes.char.ptr },
               { "origID": ctypes.char.ptr },
+              { "patchID": ctypes.char.ptr },
               { "url": ctypes.char.ptr } ]);
 
         this.contentManager = ctypes.open("/home/reg/src/kiwix/moulinkiwix/src/contentManager/libContentCManager.so");

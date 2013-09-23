@@ -393,9 +393,18 @@ namespace kiwix {
 
   bool Manager::getBookById(const string id, Book &book) {
     std::vector<kiwix::Book>::iterator itr;
+    std::string pid="";
+    for ( itr = library.books.begin(); itr != library.books.end(); ++itr ) {
+        if(id==itr->origID) {
+            pid=itr->id;
+        }
+    }
     for ( itr = library.books.begin(); itr != library.books.end(); ++itr ) {
       if ( itr->id == id) {
 	book = *itr;
+	if(pid!="") {
+        book.patchID=pid;
+	}
 	return true;
       }
     }
